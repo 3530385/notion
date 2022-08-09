@@ -4,20 +4,31 @@ from datetime import datetime, timedelta
 class Tabler:
     def __init__(self,tablename):
         self.df_dash=pd.read_csv('table_dash.csv')
+        self.current_task_index=self.df_dash[self.df_dash['Done']=='No'].index[0]
+        self.current_task=self.df_dash.iloc[self.current_task_index]
 
     def get_current_task(self):
+        return self.current_task
 
-        return self.df_dash[
-            self.df_dash['Done']=='No'].iloc[0]
+    def done_task(self,current_time):
+        self.df_dash.loc[self.current_task_index,'Done']='Yes'
+        self.df_dash.loc[self.current_task_index,'Time done']=str(current_time)
+        self.df_dash.loc[self.current_task_index,'Time_seconds']=current_time.total_seconds()
+        self.df_dash.loc[self.current_task_index,'Time done']=str(datetime.now())
+        self.df_dash.loc[self.current_task_index,'Efficiency']=self.current_task['Cost']/self.current_task['Time_seconds']*3600
+        self.df_dash.to_csv('table_dash.csv',index=False)
+        self.current_task_index=self.df_dash[self.df_dash['Done']=='No'].index[0]
+        self.current_task=self.df_dash.iloc[self.current_task_index]
+        return self.current_task
 
 
 class Timer:
-    def __init__(self):
+    def __init__(self,previous_time):
         with open('clockify_token.txt','r') as f:
             self.clockify_token=f.read()
         self.timer_start=None
         self.Clock=Clockify_updater(self.clockify_token)
-        self.previous_timing=timedelta(0)
+        self.previous_timing=previous_time
 
     def start_timer(self,task):
         self.current_task=task
